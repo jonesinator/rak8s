@@ -11,6 +11,16 @@
   tags:
     - boot
 
+- name: Load the br_netfilter kernel module.
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Set the br_netfilter kernel module to load on boot.
+  lineinfile:
+    dest: /etc/modules
+    line: br_netfilter
+
 - name: Pass bridged IPv4 traffic to iptables' chains
   sysctl:
     name: net.bridge.bridge-nf-call-iptables
