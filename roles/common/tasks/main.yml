@@ -1,15 +1,27 @@
 ---
 # tasks file for common
-- name: Enabling cgroup options at boot
-  copy:
-    src: cmdline.txt
-    dest: /boot/cmdline.txt
-    owner: root
-    group: root
-    mode: 0755
+- name: Make a cmdline.txt copy where each parameter is on its own line.
+  shell: >-
+    tr ' ' '\n' < /boot/cmdline.txt > /tmp/cmdline.txt
+
+- name: Add line for cgroup_enable=cpuset to cmdline.txt.
+  lineinfile:
+    path: /tmp/cmdline.txt
+    line: "{{ item }}"
+  with_items:
+    - cgroup_enable=cpuset
+    - cgroup_memory=1
   register: cmdline
-  tags:
-    - boot
+
+- name: Copy the file back.
+  shell: >-
+    tr '\n' ' ' < /tmp/cmdline.txt > /boot/cmdline.txt
+  when: cmdline|changed
+
+- name: Remove the temporary cmdline.txt.
+  file:
+    path: /tmp/cmdline.txt
+    state: absent
 
 - name: Load the br_netfilter kernel module.
   modprobe:
